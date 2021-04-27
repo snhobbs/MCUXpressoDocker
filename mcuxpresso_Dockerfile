@@ -3,21 +3,23 @@
 #
 # build:
 #
-# docker build -t mcuxpresso .
+# docker build -t mcuxpresso . -f mcuxpresso_Dockerfile
 #
 # run:
 #
 # docker run -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY mcuxpresso
 # if running dockerd as superuser, you need to first run xhost +local:root to run the GUI.
-=======
+# sudo docker run --privileged -uuser -ti --entrypoint="/bin/bash" --rm -e DISPLAY=$DISPLAY -e TERM=$TERM -v /tmp/.X11-unix:/tmp/.X11-unix mcuxpresso
 #
 # See https://dexvis.wordpress.com/2016/04/04/running-javafx-in-a-docker-container/
 ##########################################################################################
 
 FROM ubuntu:18.04
 LABEL Description="Image for buiding arm project with mcuxpresso"
-WORKDIR /work
 # Pull base image.
+
+RUN useradd -ms /bin/bash  user
+WORKDIR /home/user
 
 ENV SDK_VERSION 2.8.0
 ENV TARGET LPC845
@@ -25,17 +27,13 @@ ENV IDE_VERSION 11.3.0_5222
 ENV JLINK_PKG JLink_Linux_x86_64.deb
 
 LABEL Description="Image for buiding arm project with mcuxpresso"
-WORKDIR /work
-Run apt update
-
-
 ENV SDK SDK_${SDK_VERSION}_${TARGET}.zip
 ENV BASENAME mcuxpressoide-${IDE_VERSION}
 ENV IDE ${BASENAME}.x86_64 
 COPY ./${IDE}.deb.bin /work
 COPY ./${SDK} /work
 
-
+Run apt update
 RUN apt install -y \
 # Development files
       whiptail \
@@ -45,31 +43,34 @@ RUN apt install -y \
       libswt-gtk-3-java \
       wget && \
     apt clean
+RUN apt-get install -y libwebkit2gtk-4.0-37
+RUN apt-get install -y libwebkitgtk-1.0-0
+RUN apt-get install -y libusb-1.0-0-dev
+RUN apt-get install -y dfu-util 
+RUN apt-get install usbutils
 
 #dpkg --add-architecture i386 && apt-get update &&\
-#RUN apt-get install -y libusb-1.0-0-dev dfu-util 
-#RUN apt-get install libwebkit2gtk-4.0-37
-RUN apt-get install libwebkitgtk-1.0-0
-RUN apt-get install lsbutils
-  #apt-get install libncurses5:i386 udev &&\
+#apt-get install libncurses5:i386 udev &&\
 
+# manually install mcuxpressoide - post install script fails
 # install mcuxpresso
 RUN chmod a+x ${IDE}.deb.bin
-  # Extract the installer to a deb package
-RUN ./${IDE}.deb.bin --noexec --target mcu &&\
-    cd mcu &&\
-    dpkg --add-architecture i386 && apt-get update &&\
-    apt-get install -y libusb-1.0-0-dev dfu-util libncurses5:i386 udev &&\
-    dpkg -i --force-depends ${JLINK_PKG} &&\
-    # manually install mcuxpressoide - post install script fails
+# Extracts to directory mcu
+RUN ./${IDE}.deb.bin --noexec --target mcu
+RUN cd mcu && dpkg -i --force-depends ${JLINK_PKG} &&\
     dpkg --unpack ${IDE}.deb &&\
     rm /var/lib/dpkg/info/mcuxpressoide.postinst -f &&\
     dpkg --configure mcuxpressoide &&\
     apt-get install -yf &&\
     # manually run the postinstall script
     mkdir -p /usr/share/NXPLPCXpresso &&\
-    chmod a+w /usr/share/NXPLPCXpresso &&\
-    ln -s /usr/local/mcuxpressoide-${IDE_VERSION} /usr/local/mcuxpressoide
+    chmod a+w /usr/share/NXPLPCXpresso
+
+RUN ln -s /usr/local/mcuxpressoide-${IDE_VERSION} /usr/local/mcuxpressoide
+RUN ln -s /usr/local/mcuxpressoide-${IDE_VERSION} /bin/mcuxpresso
+
+#RUN dpkg --add-architecture i386 && apt-get update &&\
+#    apt-get install -y libusb-1.0-0-dev dfu-util libncurses5:i386 udev &&\
 
 ENV TOOLCHAIN_PATH /usr/local/mcuxpressoide/ide/tools/bin
 ENV PATH $TOOLCHAIN_PATH:$PATH
@@ -81,3 +82,4 @@ RUN mkdir -p /root/mcuxpresso/01/SDKPackages &&\
 RUN ln -s /usr/local/${BASENAME}/ide/mcuxpressoide /bin/mcuxpressoide
 RUN rm ${IDE}.deb.bin
 RUN rm -rf mcu
+USER user

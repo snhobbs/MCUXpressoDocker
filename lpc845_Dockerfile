@@ -1,0 +1,35 @@
+##########################################################################################
+# Building on Dockerfile installation mcuxpresso:
+#
+# build:
+#
+# docker build -t lpc845 . -f lpc845_Dockerfile
+#
+# run:
+#
+# docker run -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY lpc845 
+# if running dockerd as superuser, you need to first run xhost +local:root to run the GUI.
+# sudo docker run --privileged -uuser -ti --entrypoint="/bin/bash" --rm -e DISPLAY=$DISPLAY -e TERM=$TERM -v /tmp/.X11-unix:/tmp/.X11-unix lpc845
+#
+# See https://dexvis.wordpress.com/2016/04/04/running-javafx-in-a-docker-container/
+##########################################################################################
+
+FROM mcu:latest
+LABEL Description="Image for using mcuxpresso with a specified SDK"
+# Pull base image.
+
+USER user
+WORKDIR /home/user
+
+ENV SDK_VERSION 2.8.0
+ENV TARGET LPC845
+ENV SDK SDK_${SDK_VERSION}_${TARGET}.zip
+COPY ./${SDK} /home/user
+
+ENV TOOLCHAIN_PATH /usr/local/mcuxpressoide/ide/tools/bin
+ENV PATH $TOOLCHAIN_PATH:$PATH
+
+# add the sdk package
+RUN mkdir -p /home/user/mcuxpresso/01/SDKPackages &&\
+  mv ${SDK} /home/user/mcuxpresso/01/SDKPackages
+
