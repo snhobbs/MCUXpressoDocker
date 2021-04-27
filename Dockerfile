@@ -1,4 +1,19 @@
-FROM ubuntu:16.04
+##########################################################################################
+# mcuxpresso Dockerfile installation:
+#
+# build:
+#
+# docker build -t mcuxpresso .
+#
+# run:
+#
+# docker run -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY mcuxpresso
+# if running dockerd as superuser, you need to first run xhost +local:root to run the GUI.
+#
+# See https://dexvis.wordpress.com/2016/04/04/running-javafx-in-a-docker-container/
+##########################################################################################
+
+FROM ubuntu:18.04
 LABEL Description="Image for buiding arm project with mcuxpresso"
 WORKDIR /work
 
