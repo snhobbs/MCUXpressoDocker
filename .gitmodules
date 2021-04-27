@@ -1,0 +1,3 @@
+[submodule "docker-baseimage-gui"]
+	path = docker-baseimage-gui
+	url = git@github.com:jlesage/docker-baseimage-gui.git
