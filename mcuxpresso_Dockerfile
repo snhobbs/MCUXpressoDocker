@@ -18,8 +18,11 @@ FROM ubuntu:18.04
 LABEL Description="Image for buiding arm project with mcuxpresso"
 # Pull base image.
 
-RUN useradd -ms /bin/bash  user
-WORKDIR /home/user
+RUN apt-get update && apt-get -y install sudo
+RUN useradd -ms /bin/bash user && echo "user:user" | chpasswd && adduser user sudo
+
+ENV HOME /home/user
+WORKDIR ${HOME}
 
 ENV SDK_VERSION 2.8.0
 ENV TARGET LPC845
@@ -30,8 +33,8 @@ LABEL Description="Image for buiding arm project with mcuxpresso"
 ENV SDK SDK_${SDK_VERSION}_${TARGET}.zip
 ENV BASENAME mcuxpressoide-${IDE_VERSION}
 ENV IDE ${BASENAME}.x86_64 
-COPY ./${IDE}.deb.bin /work
-COPY ./${SDK} /work
+COPY ./${IDE}.deb.bin ${HOME}
+COPY ./${SDK} ${HOME}
 
 Run apt update
 RUN apt install -y \
@@ -83,3 +86,4 @@ RUN ln -s /usr/local/${BASENAME}/ide/mcuxpressoide /bin/mcuxpressoide
 RUN rm ${IDE}.deb.bin
 RUN rm -rf mcu
 USER user
+CMD /bin/bash

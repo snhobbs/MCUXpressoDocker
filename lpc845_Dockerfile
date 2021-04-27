@@ -14,7 +14,7 @@
 # See https://dexvis.wordpress.com/2016/04/04/running-javafx-in-a-docker-container/
 ##########################################################################################
 
-FROM mcu:latest
+FROM mcuxpresso:latest
 LABEL Description="Image for using mcuxpresso with a specified SDK"
 # Pull base image.
 
